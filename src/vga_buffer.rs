@@ -137,6 +137,7 @@ pub fn print() {
 	write!(writer, "format this bish {}", 43).unwrap();
 }
 
+
 lazy_static! {
 	pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
 		column_position: 0,
@@ -145,24 +146,12 @@ lazy_static! {
 	});
 }
 
-
-
-
-
-#[macro_export]
-macro_rules! print {
-	($($arg:tt)*) => ($crate::vga_buffer::_print(format_args!($($arg)*)));
-}
-
-#[macro_export]
-macro_rules! println {
-	() => {$crate::print!('\n')};
-	($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
-}
-
-
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
-	use core::fmt::Write;
-	WRITER.lock().write_fmt(args).unwrap();
+    use core::fmt::Write;
+    use x86_64::instructions::interrupts;
+
+    interrupts::without_interrupts(|| {
+        WRITER.lock().write_fmt(args).unwrap();
+    })
 }
